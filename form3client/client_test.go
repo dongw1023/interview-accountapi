@@ -161,11 +161,10 @@ func TestClient_Delete_Fail(t *testing.T) {
 
 func TestClient_Create(t *testing.T) {
 	expectedAccountData, err := readAccountSampleData()
-	account := getAccount(expectedAccountData)
-
 	if err != nil {
 		t.Errorf("Error to read account sample data: %s", err)
 	}
+	account := getAccount(expectedAccountData)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
@@ -181,7 +180,6 @@ func TestClient_Create(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected err == nil, got '%s'", err)
 	}
-
 	if response.ID != account.ID {
 		t.Errorf("Expected account == %s, got %s", response.ID, account.ID)
 	}
