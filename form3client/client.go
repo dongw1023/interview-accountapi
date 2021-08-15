@@ -64,6 +64,11 @@ func (c *Form3Client) Fetch(url string, accountID string) (*AccountData, error) 
 		return nil, fmt.Errorf("fetch error: %s", err.Error())
 	}
 
+	if response.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("fetch error: status == %d, text == %s",
+			response.StatusCode, http.StatusText(response.StatusCode))
+	}
+
 	responseData, err := c.Response(response)
 	if err != nil {
 		return nil, fmt.Errorf("fetch error: %s", err.Error())
@@ -72,7 +77,7 @@ func (c *Form3Client) Fetch(url string, accountID string) (*AccountData, error) 
 	var data ResponseData
 	err = json.Unmarshal(responseData, &data)
 	if err != nil {
-		return nil, fmt.Errorf("fetch: error to read response body: %s", err.Error())
+		return nil, fmt.Errorf("fetch error: read response body: %s", err.Error())
 	}
 
 	return data.Data, nil
@@ -91,7 +96,12 @@ func (c *Form3Client) Delete(url string, accountID string, queryParams map[strin
 		return false, fmt.Errorf("delete error: %s", err.Error())
 	}
 
-	return response.StatusCode == 204, nil
+	if response.StatusCode != http.StatusNoContent {
+		return false, fmt.Errorf("delete error: status == %d, text == %s",
+			response.StatusCode, http.StatusText(response.StatusCode))
+	}
+
+	return response.StatusCode == http.StatusNoContent, nil
 }
 
 func (c *Form3Client) Create(url string, accountData AccountData) (*AccountData, error) {
@@ -106,18 +116,23 @@ func (c *Form3Client) Create(url string, accountData AccountData) (*AccountData,
 
 	response, err := c.Request(request)
 	if err != nil {
-		return nil, fmt.Errorf("delete error: %s", err.Error())
+		return nil, fmt.Errorf("create error: %s", err.Error())
+	}
+
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
+		return nil, fmt.Errorf("create error: status == %d, text == %s",
+			response.StatusCode, http.StatusText(response.StatusCode))
 	}
 
 	responseData, err := c.Response(response)
 	if err != nil {
-		return nil, fmt.Errorf("delete error: %s", err.Error())
+		return nil, fmt.Errorf("create error: %s", err.Error())
 	}
 
 	var newAccountData ResponseData
 	err = json.Unmarshal(responseData, &newAccountData)
 	if err != nil {
-		return nil, fmt.Errorf("fetch: error to read response body: %s", err.Error())
+		return nil, fmt.Errorf("create error: %s", err.Error())
 	}
 
 	return newAccountData.Data, nil
